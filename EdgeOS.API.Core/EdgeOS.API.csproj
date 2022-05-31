@@ -42,7 +42,6 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncUtil.cs" />
     <Compile Include="FrameReassembler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerCertificateValidationCallback.cs" />

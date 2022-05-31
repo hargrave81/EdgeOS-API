@@ -1,5 +1,5 @@
-﻿using EdgeOS.API.Types.SubscriptionRequests;
-using EdgeOS.API.Types.SubscriptionResponses;
+﻿using EdgeOS.API.Core.Types.SubscriptionRequests;
+using EdgeOS.API.Core.Types.SubscriptionResponses;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -7,7 +7,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 
-namespace EdgeOS.API
+namespace EdgeOS.API.Core
 {
     /// <summary>Represents a WebSocket connection to EdgeOS and provides methods for requesting and receiving data.</summary>
     public class StatsConnection : IDisposable
@@ -75,17 +75,17 @@ namespace EdgeOS.API
         public StatsConnection()
         {
             // Implementation of timeout of 5000ms.
-            _cancellationTokenSource.CancelAfter(5000);
+            //_cancellationTokenSource.CancelAfter(5000);
+            
+            // allow to ignore cert issues
+            _clientWebSocket.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
         }
 
         /// <summary>Allows a local .crt certificate file to be used to validate a host.</summary>
         public void AllowLocalCertificates()
         {
             // Ignore certificate trust errors if there is a saved public key pinned.
-            ServicePointManager.ServerCertificateValidationCallback += ServerCertificateValidationCallback.PinPublicKey;
-            // Ignore all Cert Errors
-            ServicePointManager.ServerCertificateValidationCallback +=
-                                    (sender, cert, chain, sslPolicyErrors) => true;
+            ServicePointManager.ServerCertificateValidationCallback += ServerCertificateValidationCallback.PinPublicKey;            
         }
 
         /// <summary>Tells the underlying ClientWebSocket to connect and raises various connection events.</summary>
@@ -95,8 +95,7 @@ namespace EdgeOS.API
             // Raise an event.
             ConnectionStatusChanged?.Invoke(this, ConnectionStatus.Connecting);
 
-            
-
+           
             // Perform the connection.
             await _clientWebSocket.ConnectAsync(uri, _cancellationTokenSource.Token);
 
@@ -139,8 +138,7 @@ namespace EdgeOS.API
                     do
                     {
                         // Ask the ClientWebSocket for any data.
-                        CancellationToken barf = new CancellationToken(); // don't foraward the cancellation token through it likes to abort this call
-                        result = await _clientWebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), barf);
+                        result = await _clientWebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cancellationTokenSource.Token);
 
                         switch (result.MessageType)
                         {

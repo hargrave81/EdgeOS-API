@@ -1,4 +1,4 @@
-﻿namespace EdgeOS.API.Types
+﻿namespace EdgeOS.API.Core.Types
 {
     /// <summary>An object that contains network interface information for a specific EdgeOS network interface.</summary>
     public class Interface

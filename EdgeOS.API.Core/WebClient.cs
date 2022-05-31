@@ -4,9 +4,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace EdgeOS.API
+namespace EdgeOS.API.Core
 {
     /// <summary>Provides an API into EdgeOS based off the official API.</summary>
     public class WebClient : IDisposable
@@ -33,6 +32,7 @@ namespace EdgeOS.API
             this.username = username;
             this.password = password;
 
+            // Prevent .NET from consuming the HTTP 303 that contains our authentication session.
             var handler = new HttpClientHandler() { AllowAutoRedirect = false, CookieContainer = new CookieContainer() };
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.ServerCertificateCustomValidationCallback =
@@ -48,7 +48,7 @@ namespace EdgeOS.API
                 // A EdgeOS API endpoint is the hostname.
                 BaseAddress = new Uri(host)
             };
-            
+
             // Be a good net citizen and reveal who we are.
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "C#-EdgeOS-API");
 
@@ -72,7 +72,7 @@ namespace EdgeOS.API
             // Perform the HTTP POST.
             var message = new HttpRequestMessage(HttpMethod.Post, "/");
             message.Content = new FormUrlEncodedContent(loginForm);
-            
+
             message.Headers.Add("Host", new Uri(_httpClient.BaseAddress.AbsoluteUri).Host);
             message.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
             message.Headers.Add("Connection", "keep-alive");
@@ -80,7 +80,8 @@ namespace EdgeOS.API
 
             //message.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
             HttpResponseMessage httpResponseMessage = AsyncUtil.RunSync(() => _httpClient.SendAsync(message));
-            
+
+
             // The server does not correctly use HTTP Status codes.
             switch (httpResponseMessage.StatusCode)
             {
