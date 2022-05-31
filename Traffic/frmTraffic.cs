@@ -31,6 +31,7 @@ namespace Traffic
                 // Login to the router.
                 webClient.Login();
 
+                webClient.ClearTraffic();
 
                 statsConnection = new StatsConnection();
                 // Share a valid SessionID with the StatsConnection object.

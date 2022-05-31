@@ -21,7 +21,7 @@ namespace EdgeOS.API.Core
 
         /// <summary>The HTTP Client object that all requests will be performed from. It may have valid credentials pre-configured if <see cref="Login"/> is invoked.</summary>
         private readonly HttpClient _httpClient;
-
+        private readonly CookieContainer cookieContainer = new CookieContainer();
         /// <summary>Creates an instance of the WebClient which can be used to call EdgeOS API methods.</summary>
         /// <param name="username">The username this instance will use to authenticate with the EdgeOS device.</param>
         /// <param name="password">The password this instance will use to authenticate with the EdgeOS device.</param>
@@ -33,7 +33,7 @@ namespace EdgeOS.API.Core
             this.password = password;
 
             // Prevent .NET from consuming the HTTP 303 that contains our authentication session.
-            var handler = new HttpClientHandler() { AllowAutoRedirect = false, CookieContainer = new CookieContainer() };
+            var handler = new HttpClientHandler() { AllowAutoRedirect = false, CookieContainer = cookieContainer };
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.ServerCertificateCustomValidationCallback =
                 (httpRequestMessage, cert, cetChain, policyErrors) =>
@@ -116,6 +116,21 @@ namespace EdgeOS.API.Core
 
                     break;
             }
+        }
+
+
+        public void ClearTraffic()
+        {
+            var message = new HttpRequestMessage(HttpMethod.Post, "api/edge/operation/clear-traffic-analysis.json");
+           
+            message.Headers.Add("Host", new Uri(_httpClient.BaseAddress.AbsoluteUri).Host);
+            message.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+            message.Headers.Add("Connection", "keep-alive");
+            message.Headers.Add("Accept-Encoding", "gzip, deflate, br");            
+            cookieContainer.Add(new Uri("https://" + new Uri(_httpClient.BaseAddress.AbsoluteUri).Host),new Cookie( "PHPSESSID" , this.SessionID));
+            message.Headers.Add("X-Requested-With", "XMLHttpRequest");
+            HttpResponseMessage httpResponseMessage = AsyncUtil.RunSync(() => _httpClient.SendAsync(message));
+            
         }
 
         /// <summary>Ensures proper clean up of the resources.</summary>
